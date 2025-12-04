@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.banco.ms.dto.ContaPfReponseDto;
+import com.banco.ms.dto.ContaPfRequestDto;
 import com.banco.ms.model.AccountPf;
 import com.banco.ms.service.ContaPfService;
 
@@ -26,27 +28,27 @@ public class ContaPfController {
 	private ContaPfService service;
 	
 	@PostMapping
-	public ResponseEntity<AccountPf> create(@RequestBody AccountPf pf){
-		AccountPf accPf = service.create(pf);
-		return ResponseEntity.status(HttpStatus.CREATED).body(accPf);
+	public ResponseEntity<ContaPfReponseDto> create(@RequestBody ContaPfRequestDto pf){
+		AccountPf accPf = service.create(service.fromDto(pf));
+		return ResponseEntity.status(HttpStatus.CREATED).body(service.toDto(accPf));
 	}
 	
 	@GetMapping
-	public ResponseEntity<List<AccountPf>> findAll(){
-		List<AccountPf> accPf = service.findAll();
-		return ResponseEntity.ok(accPf);
+	public ResponseEntity<List<ContaPfReponseDto>> findAll(){
+		List<ContaPfReponseDto> listAcc = service.findAll().stream().map(service::toDto).toList();
+		return ResponseEntity.ok(listAcc);
 	}
 	
 	@GetMapping("/{id}")
-	public ResponseEntity<AccountPf> findById(@PathVariable Long id){
+	public ResponseEntity<ContaPfReponseDto> findById(@PathVariable Long id){
 		 AccountPf acc = service.findById(id);
-		 return ResponseEntity.ok(acc);
+		 return ResponseEntity.ok(service.toDto(acc));
 	}
 	
 	@PutMapping("/{id}")
-	public ResponseEntity<AccountPf> update(@PathVariable Long id, @RequestBody AccountPf pf){
+	public ResponseEntity<ContaPfReponseDto> update(@PathVariable Long id, @RequestBody ContaPfRequestDto pf){
 		AccountPf acc = service.update(id, pf);
-		return ResponseEntity.ok(acc);
+		return ResponseEntity.ok(service.toDto(acc));
 	}
 	
 	@DeleteMapping("/{id}")

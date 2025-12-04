@@ -34,6 +34,17 @@ public class AccountPf{
 	
 	public AccountPf() {
 	}
+	
+	
+
+	public AccountPf(String name, BigDecimal balance, StatusAccount status) {
+		super();
+		this.name = name;
+		this.balance = balance;
+		this.status = status;
+	}
+
+
 
 	public AccountPf(Long id, String name, LocalDateTime createAt, BigDecimal balance, StatusAccount status) {
 		super();

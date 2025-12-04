@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.banco.ms.dto.ContaPfReponseDto;
+import com.banco.ms.dto.ContaPfRequestDto;
 import com.banco.ms.enums.StatusAccount;
 import com.banco.ms.model.AccountPf;
 import com.banco.ms.repository.ContaPfRepository;
@@ -27,11 +29,13 @@ public class ContaPfService {
 		return repository.findById(id).orElseThrow(() -> new RuntimeException("Conta não localizada com esse id " + id));
 	}
 	
-	public AccountPf update(Long id,AccountPf acc) {
+	public AccountPf update(Long id, ContaPfRequestDto acc) {
 		AccountPf pf = repository.findById(id).orElseThrow(() -> new RuntimeException("Conta não localizada com esse id " + id));
-		pf.setName(acc.getName());
-		pf.setBalance(acc.getBalance());
-		pf.setStatus(acc.getStatus());
+		pf.setName(acc.name());
+		pf.setBalance(acc.balance());
+		if(acc.status() != null) {
+			pf.setStatus(acc.status());
+		}
 		return repository.save(pf);
 	}
 	
@@ -39,6 +43,18 @@ public class ContaPfService {
 		AccountPf acc = repository.findById(id).orElseThrow(() -> new RuntimeException("Conta não localizada com esse id " + id));
 		acc.setStatus(StatusAccount.INATIVA);
 		repository.save(acc);
+	}
+	
+	public ContaPfReponseDto toDto(AccountPf acc) {
+		return new ContaPfReponseDto(acc.getName(), acc.getBalance(),acc.getStatus());
+	}
+	
+	public AccountPf fromDto(ContaPfRequestDto dto) {
+		AccountPf acc = new AccountPf();
+		acc.setName(dto.name());
+		acc.setBalance(dto.balance());
+		acc.setStatus(StatusAccount.EM_ANALISE);
+		return acc;
 	}
 
 }
