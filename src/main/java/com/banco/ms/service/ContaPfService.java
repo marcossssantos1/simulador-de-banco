@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.banco.ms.dto.ContaPfReponseDto;
 import com.banco.ms.dto.ContaPfRequestDto;
 import com.banco.ms.enums.StatusAccount;
+import com.banco.ms.exceptions.EntityNotFoundException;
 import com.banco.ms.model.AccountPf;
 import com.banco.ms.repository.ContaPfRepository;
 
@@ -26,11 +27,11 @@ public class ContaPfService {
 	}
 	
 	public AccountPf findById(Long id) {
-		return repository.findById(id).orElseThrow(() -> new RuntimeException("Conta não localizada com esse id " + id));
+		return repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Conta não localizada com esse id " + id));
 	}
 	
 	public AccountPf update(Long id, ContaPfRequestDto acc) {
-		AccountPf pf = repository.findById(id).orElseThrow(() -> new RuntimeException("Conta não localizada com esse id " + id));
+		AccountPf pf = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Conta não localizada com esse id " + id));
 		pf.setName(acc.name());
 		pf.setBalance(acc.balance());
 		if(acc.status() != null) {
@@ -40,7 +41,7 @@ public class ContaPfService {
 	}
 	
 	public void inative(Long id) {
-		AccountPf acc = repository.findById(id).orElseThrow(() -> new RuntimeException("Conta não localizada com esse id " + id));
+		AccountPf acc = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Conta não localizada com esse id " + id));
 		acc.setStatus(StatusAccount.INATIVA);
 		repository.save(acc);
 	}
