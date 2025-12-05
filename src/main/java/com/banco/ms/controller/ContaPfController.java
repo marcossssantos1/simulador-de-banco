@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.banco.ms.dto.ContaPfReponseDto;
 import com.banco.ms.dto.ContaPfRequestDto;
+import com.banco.ms.dto.ContaPfUpdateRequestDto;
 import com.banco.ms.model.AccountPf;
 import com.banco.ms.service.ContaPfService;
 
@@ -46,7 +47,7 @@ public class ContaPfController {
 	}
 	
 	@PutMapping("/{id}")
-	public ResponseEntity<ContaPfReponseDto> update(@PathVariable Long id, @RequestBody ContaPfRequestDto pf){
+	public ResponseEntity<ContaPfReponseDto> update(@PathVariable Long id, @RequestBody ContaPfUpdateRequestDto pf){
 		AccountPf acc = service.update(id, pf);
 		return ResponseEntity.ok(service.toDto(acc));
 	}

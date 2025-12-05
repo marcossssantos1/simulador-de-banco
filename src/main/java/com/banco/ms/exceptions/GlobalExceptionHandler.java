@@ -22,10 +22,18 @@ public class GlobalExceptionHandler {
 	
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ErrorResponse> errorSystem(Exception ex, HttpServletRequest request){
-		ErrorResponse error = new ErrorResponse(LocalDateTime.now(), HttpStatus.INTERNAL_SERVER_ERROR.value(), "Server error", 
+		ErrorResponse error = new ErrorResponse(LocalDateTime.now(), HttpStatus.INTERNAL_SERVER_ERROR.value(), "Server Error", 
 				ex.getMessage(), request.getRequestURI());
 		
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+	}
+	
+	@ExceptionHandler(BadResquestException.class)
+	public ResponseEntity<ErrorResponse> badRequest(Exception ex, HttpServletRequest request){
+		ErrorResponse error = new ErrorResponse(LocalDateTime.now(), HttpStatus.BAD_REQUEST.value(), "Bad Request", 
+				ex.getMessage(), request.getRequestURI());
+		
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
 	}
 
 }

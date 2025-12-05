@@ -1,5 +1,6 @@
 package com.banco.ms.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,7 +8,9 @@ import org.springframework.stereotype.Service;
 
 import com.banco.ms.dto.ContaPfReponseDto;
 import com.banco.ms.dto.ContaPfRequestDto;
+import com.banco.ms.dto.ContaPfUpdateRequestDto;
 import com.banco.ms.enums.StatusAccount;
+import com.banco.ms.exceptions.BadResquestException;
 import com.banco.ms.exceptions.EntityNotFoundException;
 import com.banco.ms.model.AccountPf;
 import com.banco.ms.repository.ContaPfRepository;
@@ -30,10 +33,16 @@ public class ContaPfService {
 		return repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Conta não localizada com esse id " + id));
 	}
 	
-	public AccountPf update(Long id, ContaPfRequestDto acc) {
+	public AccountPf update(Long id, ContaPfUpdateRequestDto acc) {
 		AccountPf pf = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Conta não localizada com esse id " + id));
-		pf.setName(acc.name());
-		pf.setBalance(acc.balance());
+		
+		if(pf.getStatus() == StatusAccount.INATIVA) {
+			throw new BadResquestException("Não é permitido atualizar conta inativa");
+		}
+		
+		if(acc.name() != null) {
+			pf.setName(acc.name());
+		}
 		if(acc.status() != null) {
 			pf.setStatus(acc.status());
 		}
@@ -52,8 +61,11 @@ public class ContaPfService {
 	
 	public AccountPf fromDto(ContaPfRequestDto dto) {
 		AccountPf acc = new AccountPf();
+		if(dto.name() == null || dto.name().isBlank()) {
+			throw new BadResquestException("O nome não pode estar vazio");
+		}
 		acc.setName(dto.name());
-		acc.setBalance(dto.balance());
+		acc.setBalance(BigDecimal.ZERO);
 		acc.setStatus(StatusAccount.EM_ANALISE);
 		return acc;
 	}
