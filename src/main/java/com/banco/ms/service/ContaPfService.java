@@ -9,11 +9,14 @@ import org.springframework.stereotype.Service;
 import com.banco.ms.dto.ContaPfReponseDto;
 import com.banco.ms.dto.ContaPfRequestDto;
 import com.banco.ms.dto.ContaPfUpdateRequestDto;
+import com.banco.ms.dto.TransactionRequestDto;
 import com.banco.ms.enums.StatusAccount;
 import com.banco.ms.exceptions.BadResquestException;
 import com.banco.ms.exceptions.EntityNotFoundException;
 import com.banco.ms.model.AccountPf;
 import com.banco.ms.repository.ContaPfRepository;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class ContaPfService {
@@ -72,5 +75,37 @@ public class ContaPfService {
 		acc.setStatus(StatusAccount.EM_ANALISE);
 		return acc;
 	}
+	
+	@Transactional
+	public ContaPfReponseDto deposit(Long id, TransactionRequestDto dto) {
+		AccountPf acc = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Conta não localizada com esse id " + id));
+		
+		if(acc.getStatus() == StatusAccount.INATIVA) {
+			throw new BadResquestException("Não é permitido depositar em uma conta inativa");
+		}
+		
+		acc.setBalance(acc.getBalance().add(dto.amount()));
+		AccountPf saved =  repository.save(acc);
+		return toDto(saved);
+	}
+	
+	@Transactional
+	public ContaPfReponseDto withdraw(Long id, TransactionRequestDto dto) {
+	    AccountPf acc = repository.findById(id)
+	            .orElseThrow(() -> new EntityNotFoundException("Conta não encontrada"));
+
+	    if (acc.getStatus() == StatusAccount.INATIVA) {
+	        throw new BadResquestException("Não é possível sacar de uma conta inativa.");
+	    }
+
+	    if (acc.getBalance().compareTo(dto.amount()) < 0) {
+	        throw new BadResquestException("Saldo insuficiente para saque.");
+	    }
+
+	    acc.setBalance(acc.getBalance().subtract(dto.amount()));
+	    AccountPf saved = repository.save(acc);
+	    return toDto(saved);
+	}
+
 
 }
