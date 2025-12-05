@@ -20,6 +20,8 @@ import com.banco.ms.dto.ContaPfUpdateRequestDto;
 import com.banco.ms.model.AccountPf;
 import com.banco.ms.service.ContaPfService;
 
+import jakarta.validation.Valid;
+
 
 @RestController
 @RequestMapping("/pf")
@@ -29,7 +31,7 @@ public class ContaPfController {
 	private ContaPfService service;
 	
 	@PostMapping
-	public ResponseEntity<ContaPfReponseDto> create(@RequestBody ContaPfRequestDto pf){
+	public ResponseEntity<ContaPfReponseDto> create(@RequestBody @Valid ContaPfRequestDto pf){
 		AccountPf accPf = service.create(service.fromDto(pf));
 		return ResponseEntity.status(HttpStatus.CREATED).body(service.toDto(accPf));
 	}
@@ -47,15 +49,20 @@ public class ContaPfController {
 	}
 	
 	@PutMapping("/{id}")
-	public ResponseEntity<ContaPfReponseDto> update(@PathVariable Long id, @RequestBody ContaPfUpdateRequestDto pf){
+	public ResponseEntity<ContaPfReponseDto> update(@PathVariable Long id, @RequestBody @Valid ContaPfUpdateRequestDto pf){
 		AccountPf acc = service.update(id, pf);
 		return ResponseEntity.ok(service.toDto(acc));
 	}
 	
-	@DeleteMapping("/{id}")
+	@DeleteMapping("/inativar/{id}")
 	public ResponseEntity<Void> inativeAccount(@PathVariable Long id){
 		service.inative(id);
 		return ResponseEntity.noContent().build();
 	}
 
+	@DeleteMapping("/encerrar/{id}")
+	public ResponseEntity<Void> deleteAccount(@PathVariable Long id){
+		service.deleteAccount(id);
+		return ResponseEntity.noContent().build();
+	}
 }

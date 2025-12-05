@@ -40,12 +40,12 @@ public class ContaPfService {
 			throw new BadResquestException("Não é permitido atualizar conta inativa");
 		}
 		
-		if(acc.name() != null) {
-			pf.setName(acc.name());
-		}
 		if(acc.status() != null) {
 			pf.setStatus(acc.status());
 		}
+		
+		pf.setName(acc.name());
+		
 		return repository.save(pf);
 	}
 	
@@ -55,15 +55,18 @@ public class ContaPfService {
 		repository.save(acc);
 	}
 	
+	public void deleteAccount(Long id) {
+		AccountPf acc = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Conta não localizada com esse id " + id));
+		acc.setStatus(StatusAccount.ENCERRADA);
+		repository.save(acc);
+	}
+	
 	public ContaPfReponseDto toDto(AccountPf acc) {
 		return new ContaPfReponseDto(acc.getName(), acc.getBalance(),acc.getStatus());
 	}
 	
 	public AccountPf fromDto(ContaPfRequestDto dto) {
 		AccountPf acc = new AccountPf();
-		if(dto.name() == null || dto.name().isBlank()) {
-			throw new BadResquestException("O nome não pode estar vazio");
-		}
 		acc.setName(dto.name());
 		acc.setBalance(BigDecimal.ZERO);
 		acc.setStatus(StatusAccount.EM_ANALISE);

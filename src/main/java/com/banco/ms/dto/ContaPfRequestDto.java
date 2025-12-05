@@ -1,5 +1,10 @@
 package com.banco.ms.dto;
 
-public record ContaPfRequestDto(String name){
+import jakarta.validation.constraints.NotBlank;
+
+public record ContaPfRequestDto(
+		@NotBlank(message = "Nome é obrigatório para abrir uma conta") 
+        String name
+){
 
 }

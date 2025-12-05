@@ -1,13 +1,17 @@
 package com.banco.ms.exceptions;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -35,5 +39,36 @@ public class GlobalExceptionHandler {
 		
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
 	}
+	
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<ErrorResponse> validationError(MethodArgumentNotValidException ex, HttpServletRequest request){
+		
+		Map<String, String> errors = new HashMap<>();
+		ex.getBindingResult().getFieldErrors().forEach(error -> {
+	        errors.put(error.getField(), error.getDefaultMessage());
+	    });
+
+	    ErrorResponse error = new ErrorResponse(LocalDateTime.now(),HttpStatus.BAD_REQUEST.value(),"Validation Error",
+	    		errors.toString(),request.getRequestURI());
+	    
+	    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+	}
+	
+	@ExceptionHandler(ConstraintViolationException.class)
+	public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex,
+	                                                               HttpServletRequest request) {
+
+	    Map<String, String> errors = new HashMap<>();
+	    ex.getConstraintViolations().forEach(v -> {
+	        String field = v.getPropertyPath().toString();
+	        errors.put(field, v.getMessage());
+	    });
+
+	    ErrorResponse error = new ErrorResponse(LocalDateTime.now(), HttpStatus.BAD_REQUEST.value(),"Validation Error",
+	            errors.toString(),request.getRequestURI());
+
+	    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+	}
+
 
 }
