@@ -10,11 +10,15 @@ import com.banco.ms.dto.ContaPfReponseDto;
 import com.banco.ms.dto.ContaPfRequestDto;
 import com.banco.ms.dto.ContaPfUpdateRequestDto;
 import com.banco.ms.dto.TransactionRequestDto;
+import com.banco.ms.dto.TransactionResponseDto;
 import com.banco.ms.enums.StatusAccount;
+import com.banco.ms.enums.TransactiontType;
 import com.banco.ms.exceptions.BadResquestException;
 import com.banco.ms.exceptions.EntityNotFoundException;
 import com.banco.ms.model.AccountPf;
+import com.banco.ms.model.Transaction;
 import com.banco.ms.repository.ContaPfRepository;
+import com.banco.ms.repository.TransactionRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -23,6 +27,9 @@ public class ContaPfService {
 	
 	@Autowired
 	private ContaPfRepository repository;
+	
+	@Autowired
+	private TransactionRepository transactionRepository;
 	
 	public AccountPf create(AccountPf pf) {
 		return repository.save(pf);
@@ -86,6 +93,12 @@ public class ContaPfService {
 		
 		acc.setBalance(acc.getBalance().add(dto.amount()));
 		AccountPf saved =  repository.save(acc);
+		
+		// Salvar a transação
+		Transaction transaction = new Transaction(dto.amount(), TransactiontType.DEPOSITO, acc);
+		
+		transactionRepository.save(transaction);
+		
 		return toDto(saved);
 	}
 	
@@ -104,7 +117,22 @@ public class ContaPfService {
 
 	    acc.setBalance(acc.getBalance().subtract(dto.amount()));
 	    AccountPf saved = repository.save(acc);
+	    
+	 // Salvar a transação
+	    Transaction transaction = new Transaction(dto.amount(), TransactiontType.SAQUE, acc);
+	 		
+	 	transactionRepository.save(transaction);
+	    
 	    return toDto(saved);
+	}
+	
+	public List<TransactionResponseDto> getHistory(Long id){
+		repository.findById(id)
+	            .orElseThrow(() -> new EntityNotFoundException("Conta não encontrada"));
+		
+		List<Transaction> list = transactionRepository.findByAccountId(id);
+		
+		return list.stream().map(t -> new TransactionResponseDto(t.getId(), t.getAmount(), t.getType(), t.getDate())).toList();
 	}
 
 

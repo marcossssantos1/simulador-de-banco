@@ -18,6 +18,7 @@ import com.banco.ms.dto.ContaPfReponseDto;
 import com.banco.ms.dto.ContaPfRequestDto;
 import com.banco.ms.dto.ContaPfUpdateRequestDto;
 import com.banco.ms.dto.TransactionRequestDto;
+import com.banco.ms.dto.TransactionResponseDto;
 import com.banco.ms.model.AccountPf;
 import com.banco.ms.service.ContaPfService;
 
@@ -76,5 +77,10 @@ public class ContaPfController {
 	public ResponseEntity<ContaPfReponseDto> sacar(@PathVariable Long id, 
 	                                          @RequestBody @Valid TransactionRequestDto dto) {
 	    return ResponseEntity.ok(service.withdraw(id, dto));
+	}
+	
+	@GetMapping("/{id}/historico")
+	public ResponseEntity<List<TransactionResponseDto>> history(@PathVariable Long id){
+		return ResponseEntity.ok(service.getHistory(id));
 	}
 }
