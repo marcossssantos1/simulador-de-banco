@@ -1,0 +1,2 @@
+ALTER TABLE transaction
+MODIFY COLUMN type VARCHAR(50);

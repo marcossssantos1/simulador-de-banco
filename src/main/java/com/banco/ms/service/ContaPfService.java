@@ -173,5 +173,46 @@ public class ContaPfService {
 				t.getDate()
 		));
 	}
+	
+	
+	@Transactional
+	public void transfer(TransferRequestDto dto) {
+		
+		if(dto.fromAccountId().equals(dto.toAccountId())) {
+			throw new BadResquestException("A conta de origem não pode ser igual a conta de destino.");
+		}
+		
+		AccountPf accFrom = repository.findById(dto.fromAccountId()).orElseThrow(
+				() -> new EntityNotFoundException("Conta de origem não encontrada."));
+		
+		AccountPf accTo = repository.findById(dto.fromAccountId()).orElseThrow(
+				() -> new EntityNotFoundException("Conta de origem não encontrada."));
+		
+		if(accFrom.getStatus() == StatusAccount.INATIVA) {
+			throw new BadResquestException("A conta de origem está inativa");
+		}
+		
+		if(accTo.getStatus() == StatusAccount.INATIVA) {
+			throw new BadResquestException("A conta de destino está inativa");
+		}
+		
+		if(accFrom.getBalance().compareTo(dto.amount()) < 0) {
+			throw new BadResquestException("Saldo insuficiente para transfrência");
+		}
+		
+		accFrom.setBalance(accFrom.getBalance().subtract(dto.amount()));
+		
+		accTo.setBalance(accTo.getBalance().add(dto.amount()));
+		
+		repository.save(accFrom);
+		repository.save(accTo);
+		
+		transactionRepository.save(new Transaction(null, dto.amount(), TransactiontType.TRANSFERENCIA_ENVIADA,
+				LocalDateTime.now(), accFrom));
+		
+		transactionRepository.save(new Transaction(null, dto.amount(), TransactiontType.TRANSFERENCIA_RECEBIDA,
+				LocalDateTime.now(), accTo));
+		
+	}
 
 }

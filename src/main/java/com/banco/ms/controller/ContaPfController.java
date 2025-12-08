@@ -2,17 +2,30 @@ package com.banco.ms.controller;
 
 import java.util.List;
 
-import com.banco.ms.dto.*;
-import com.banco.ms.model.Transaction;
-import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
+import com.banco.ms.dto.ContaPfReponseDto;
+import com.banco.ms.dto.ContaPfRequestDto;
+import com.banco.ms.dto.ContaPfUpdateRequestDto;
+import com.banco.ms.dto.TransactionFilterDto;
+import com.banco.ms.dto.TransactionRequestDto;
+import com.banco.ms.dto.TransactionResponseDto;
+import com.banco.ms.dto.TransferRequestDto;
 import com.banco.ms.model.AccountPf;
 import com.banco.ms.service.ContaPfService;
 
@@ -90,6 +103,12 @@ public class ContaPfController {
 	) {
 		Page<TransactionResponseDto> result = service.getHistoryFiltered(id,filter,pageable);
 		return ResponseEntity.ok(result);
+	}
+	
+	@PostMapping("/transferencia")
+	public ResponseEntity<Void> transfer(@Valid @RequestBody TransferRequestDto dto){
+		service.transfer(dto);
+		return ResponseEntity.ok().build();
 	}
 
 

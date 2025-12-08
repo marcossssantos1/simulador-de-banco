@@ -3,6 +3,8 @@ package com.banco.ms.enums;
 public enum TransactiontType {
 	
 	DEPOSITO,
-	SAQUE;
+	SAQUE,
+	TRANSFERENCIA_ENVIADA,
+	TRANSFERENCIA_RECEBIDA;
 
 }
