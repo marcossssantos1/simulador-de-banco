@@ -31,6 +31,17 @@ public class ContaPfService {
 
 	@Autowired
 	private TransactionRepository transactionRepository;
+	
+	public String generateAccountNumber() {
+		int numero = (int)(Math.random() * 90000000) + 10000000;
+		return String.valueOf(numero);
+	}
+	
+	public void validateActiveAccount(AccountPf acc) {
+		if(acc.getStatus() != StatusAccount.ATIVA) {
+			throw new IllegalStateException("A operação não pode ser realizada. A conta não está ATIVA.");	
+			}
+	}
 
 	public AccountPf create(AccountPf pf) {
 		return repository.save(pf);
@@ -73,7 +84,8 @@ public class ContaPfService {
 	}
 
 	public ContaPfReponseDto toDto(AccountPf acc) {
-		return new ContaPfReponseDto(acc.getName(), acc.getBalance(), acc.getStatus());
+		return new ContaPfReponseDto(acc.getName(), acc.getBalance(), acc.getStatus(),
+				acc.getCpf(), acc.getAgency(), acc.getNumberAccount());
 	}
 
 	public AccountPf fromDto(ContaPfRequestDto dto) {
@@ -81,6 +93,9 @@ public class ContaPfService {
 		acc.setName(dto.name());
 		acc.setBalance(BigDecimal.ZERO);
 		acc.setStatus(StatusAccount.EM_ANALISE);
+		acc.setCpf(dto.cpf());
+		acc.setAgency("0001");
+		acc.setNumberAccount(generateAccountNumber());
 		return acc;
 	}
 
@@ -188,12 +203,15 @@ public class ContaPfService {
 		AccountPf accTo = repository.findById(dto.fromAccountId()).orElseThrow(
 				() -> new EntityNotFoundException("Conta de origem não encontrada."));
 		
-		if(accFrom.getStatus() == StatusAccount.INATIVA) {
-			throw new BadResquestException("A conta de origem está inativa");
+		validateActiveAccount(accFrom);
+		validateActiveAccount(accTo);
+		
+		if(accFrom.getStatus() == StatusAccount.EM_ANALISE) {
+			throw new BadResquestException("A conta de origem está em analise. Aguardando aprovação!");
 		}
 		
-		if(accTo.getStatus() == StatusAccount.INATIVA) {
-			throw new BadResquestException("A conta de destino está inativa");
+		if(accTo.getStatus() == StatusAccount.EM_ANALISE) {
+			throw new BadResquestException("A conta de destino está em analise. Aguardando aprovação!");
 		}
 		
 		if(accFrom.getBalance().compareTo(dto.amount()) < 0) {
@@ -201,17 +219,18 @@ public class ContaPfService {
 		}
 		
 		accFrom.setBalance(accFrom.getBalance().subtract(dto.amount()));
+		repository.save(accFrom);
 		
 		accTo.setBalance(accTo.getBalance().add(dto.amount()));
-		
-		repository.save(accFrom);
 		repository.save(accTo);
 		
-		transactionRepository.save(new Transaction(null, dto.amount(), TransactiontType.TRANSFERENCIA_ENVIADA,
-				LocalDateTime.now(), accFrom));
+		Transaction sent = new Transaction(null, dto.amount(), TransactiontType.TRANSFERENCIA_ENVIADA,
+				LocalDateTime.now(), accFrom);
+		transactionRepository.save(sent);
 		
-		transactionRepository.save(new Transaction(null, dto.amount(), TransactiontType.TRANSFERENCIA_RECEBIDA,
-				LocalDateTime.now(), accTo));
+		Transaction received = new Transaction(null, dto.amount(), TransactiontType.TRANSFERENCIA_RECEBIDA,
+				LocalDateTime.now(), accTo);
+		transactionRepository.save(received);
 		
 	}
 

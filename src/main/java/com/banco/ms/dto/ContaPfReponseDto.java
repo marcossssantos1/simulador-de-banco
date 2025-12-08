@@ -4,8 +4,11 @@ import java.math.BigDecimal;
 
 import com.banco.ms.enums.StatusAccount;
 
-public record ContaPfReponseDto(String name, BigDecimal balance, StatusAccount status) {
-	
-	
-
-}
+public record ContaPfReponseDto(
+		String name, 
+		BigDecimal balance, 
+		StatusAccount status,
+		String cpf,
+		String agency,
+		String numberAccount
+		) {}

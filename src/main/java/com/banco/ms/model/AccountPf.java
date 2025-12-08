@@ -24,27 +24,36 @@ public class AccountPf{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	
 	private String name;
+	
 	@CreationTimestamp
 	private LocalDateTime createAt;
+	
 	@Column(precision = 19, scale = 2)
 	private BigDecimal balance;
+	
+	@Column(nullable = false, length = 11, unique = true)
+	private String cpf;
+	
+	@Column(nullable = false)
+	private String agency;
+	
+	@Column(nullable = false, unique = true)
+	private String numberAccount;
+	
 	@Enumerated(EnumType.STRING)
 	private StatusAccount status;
 	
 	public AccountPf() {
 	}
 	
-	
-
 	public AccountPf(String name, BigDecimal balance, StatusAccount status) {
 		super();
 		this.name = name;
 		this.balance = balance;
 		this.status = status;
 	}
-
-
 
 	public AccountPf(Long id, String name, LocalDateTime createAt, BigDecimal balance, StatusAccount status) {
 		super();
@@ -54,6 +63,21 @@ public class AccountPf{
 		this.balance = balance;
 		this.status = status;
 	}
+
+	public AccountPf(Long id, String name, LocalDateTime createAt, BigDecimal balance, String cpf, String agency,
+			String numberAccount, StatusAccount status) {
+		super();
+		this.id = id;
+		this.name = name;
+		this.createAt = createAt;
+		this.balance = balance;
+		this.cpf = cpf;
+		this.agency = agency;
+		this.numberAccount = numberAccount;
+		this.status = status;
+	}
+
+
 
 	public Long getId() {
 		return id;
@@ -93,6 +117,30 @@ public class AccountPf{
 
 	public void setStatus(StatusAccount status) {
 		this.status = status;
+	}
+	
+	public String getCpf() {
+		return cpf;
+	}
+
+	public void setCpf(String cpf) {
+		this.cpf = cpf;
+	}
+
+	public String getAgency() {
+		return agency;
+	}
+
+	public void setAgency(String agency) {
+		this.agency = agency;
+	}
+
+	public String getNumberAccount() {
+		return numberAccount;
+	}
+
+	public void setNumberAccount(String numberAccount) {
+		this.numberAccount = numberAccount;
 	}
 
 	@Override
