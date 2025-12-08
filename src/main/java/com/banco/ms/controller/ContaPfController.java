@@ -2,23 +2,17 @@ package com.banco.ms.controller;
 
 import java.util.List;
 
+import com.banco.ms.dto.*;
+import com.banco.ms.model.Transaction;
+import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.banco.ms.dto.ContaPfReponseDto;
-import com.banco.ms.dto.ContaPfRequestDto;
-import com.banco.ms.dto.ContaPfUpdateRequestDto;
-import com.banco.ms.dto.TransactionRequestDto;
-import com.banco.ms.dto.TransactionResponseDto;
 import com.banco.ms.model.AccountPf;
 import com.banco.ms.service.ContaPfService;
 
@@ -79,8 +73,24 @@ public class ContaPfController {
 	    return ResponseEntity.ok(service.withdraw(id, dto));
 	}
 	
-	@GetMapping("/{id}/historico")
-	public ResponseEntity<List<TransactionResponseDto>> history(@PathVariable Long id){
-		return ResponseEntity.ok(service.getHistory(id));
+	@GetMapping("/{id}/historico-geral")
+	public ResponseEntity<Page<TransactionResponseDto>> history(
+			@PathVariable Long id,
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int size){
+		Page<TransactionResponseDto> result = service.getHistory(id,page,size);
+		return ResponseEntity.ok(result);
 	}
+
+	@GetMapping("/{id}/historico-filtrado")
+	public ResponseEntity<Page<TransactionResponseDto>> getHistoryFiltered(
+			@PathVariable Long id,
+			@Valid @RequestBody TransactionFilterDto filter,
+			@PageableDefault(size = 10, sort = "date", direction = Sort.Direction.DESC) Pageable pageable
+	) {
+		Page<TransactionResponseDto> result = service.getHistoryFiltered(id,filter,pageable);
+		return ResponseEntity.ok(result);
+	}
+
+
 }
