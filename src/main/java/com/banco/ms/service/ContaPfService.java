@@ -16,6 +16,7 @@ import com.banco.ms.enums.StatusAccount;
 import com.banco.ms.enums.TransactiontType;
 import com.banco.ms.exceptions.BadResquestException;
 import com.banco.ms.exceptions.EntityNotFoundException;
+import com.banco.ms.exceptions.InvalidAccountException;
 import com.banco.ms.model.AccountPf;
 import com.banco.ms.model.Transaction;
 import com.banco.ms.repository.ContaPfRepository;
@@ -39,7 +40,9 @@ public class ContaPfService {
 	
 	public void validateActiveAccount(AccountPf acc) {
 		if(acc.getStatus() != StatusAccount.ATIVA) {
-			throw new IllegalStateException("A operação não pode ser realizada. A conta não está ATIVA.");	
+			throw new InvalidAccountException(
+					"A operação não pode ser realizada. A conta (" +
+				acc.getNumberAccount()	+ ") está com status." + acc.getStatus() );	
 			}
 	}
 
@@ -103,9 +106,7 @@ public class ContaPfService {
 	public ContaPfReponseDto deposit(Long id, TransactionRequestDto dto) {
 		AccountPf acc = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Conta não localizada com esse id " + id));
 
-		if (acc.getStatus() == StatusAccount.INATIVA) {
-			throw new BadResquestException("Não é permitido depositar em uma conta inativa");
-		}
+		validateActiveAccount(acc);
 
 		acc.setBalance(acc.getBalance().add(dto.amount()));
 		AccountPf saved = repository.save(acc);
@@ -121,10 +122,8 @@ public class ContaPfService {
 	public ContaPfReponseDto withdraw(Long id, TransactionRequestDto dto) {
 		AccountPf acc = repository.findById(id)
 				.orElseThrow(() -> new EntityNotFoundException("Conta não encontrada"));
-
-		if (acc.getStatus() == StatusAccount.INATIVA) {
-			throw new BadResquestException("Não é possível sacar de uma conta inativa.");
-		}
+		
+		validateActiveAccount(acc);
 
 		if (acc.getBalance().compareTo(dto.amount()) < 0) {
 			throw new BadResquestException("Saldo insuficiente para saque.");
@@ -133,7 +132,6 @@ public class ContaPfService {
 		acc.setBalance(acc.getBalance().subtract(dto.amount()));
 		AccountPf saved = repository.save(acc);
 
-		// Salvar a transação
 		Transaction transaction = new Transaction(dto.amount(), TransactiontType.SAQUE, acc);
 
 		transactionRepository.save(transaction);
@@ -193,25 +191,17 @@ public class ContaPfService {
 	@Transactional
 	public void transfer(TransferRequestDto dto) {
 		
-		if(dto.fromAccountId().equals(dto.toAccountId())) {
-			throw new BadResquestException("A conta de origem não pode ser igual a conta de destino.");
-		}
-		
 		AccountPf accFrom = repository.findById(dto.fromAccountId()).orElseThrow(
 				() -> new EntityNotFoundException("Conta de origem não encontrada."));
-		
-		AccountPf accTo = repository.findById(dto.fromAccountId()).orElseThrow(
-				() -> new EntityNotFoundException("Conta de origem não encontrada."));
-		
 		validateActiveAccount(accFrom);
+		
+		AccountPf accTo = repository.findById(dto.toAccountId()).orElseThrow(
+				() -> new EntityNotFoundException("Conta de destino não encontrada."));
+		
 		validateActiveAccount(accTo);
 		
-		if(accFrom.getStatus() == StatusAccount.EM_ANALISE) {
-			throw new BadResquestException("A conta de origem está em analise. Aguardando aprovação!");
-		}
-		
-		if(accTo.getStatus() == StatusAccount.EM_ANALISE) {
-			throw new BadResquestException("A conta de destino está em analise. Aguardando aprovação!");
+		if(dto.fromAccountId().equals(dto.toAccountId())) {
+			throw new BadResquestException("A conta de origem não pode ser igual a conta de destino.");
 		}
 		
 		if(accFrom.getBalance().compareTo(dto.amount()) < 0) {
