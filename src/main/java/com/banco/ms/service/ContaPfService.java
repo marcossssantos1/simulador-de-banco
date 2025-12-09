@@ -1,6 +1,7 @@
 package com.banco.ms.service;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import com.banco.ms.enums.StatusAccount;
 import com.banco.ms.enums.TransactiontType;
+import com.banco.ms.enums.TransferType;
 import com.banco.ms.exceptions.BadResquestException;
 import com.banco.ms.exceptions.EntityNotFoundException;
 import com.banco.ms.exceptions.InvalidAccountException;
@@ -21,6 +23,7 @@ import com.banco.ms.model.AccountPf;
 import com.banco.ms.model.Transaction;
 import com.banco.ms.repository.ContaPfRepository;
 import com.banco.ms.repository.TransactionRepository;
+import com.banco.ms.util.PixKeyValidator;
 
 import jakarta.transaction.Transactional;
 
@@ -44,6 +47,25 @@ public class ContaPfService {
 					"A operação não pode ser realizada. A conta (" +
 				acc.getNumberAccount()	+ ") está com status." + acc.getStatus() );	
 			}
+	}
+	
+	public AccountPf findByPixKey(String pixKey) {
+		return repository.findByPixKey(pixKey).orElseThrow(() -> new EntityNotFoundException("Chave PIX não encontrada."));
+				
+	}
+	
+	public void validateTedTim() {
+		LocalDateTime now = LocalDateTime.now();
+		DayOfWeek day = now.getDayOfWeek();
+		int hour = now.getHour();
+		
+		if(day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY) {
+			throw new BadResquestException("TED só pode ser realizada em dias úteis.");
+		}
+		
+		if(hour < 8 || hour > 17) {
+			throw new BadResquestException("TED só permitida entre 08:00 e 17:00.");
+		}
 	}
 
 	public AccountPf create(AccountPf pf) {
@@ -195,8 +217,15 @@ public class ContaPfService {
 				() -> new EntityNotFoundException("Conta de origem não encontrada."));
 		validateActiveAccount(accFrom);
 		
-		AccountPf accTo = repository.findById(dto.toAccountId()).orElseThrow(
-				() -> new EntityNotFoundException("Conta de destino não encontrada."));
+		AccountPf accTo;
+		
+		if(dto.type() == TransferType.PIX) {
+			accTo = findByPixKey(dto.pixKey());
+		} else {
+			validateTedTim();
+			accTo = repository.findById(dto.toAccountId())
+					.orElseThrow(() -> new EntityNotFoundException("Conta de destino não encontrada."));
+		}
 		
 		validateActiveAccount(accTo);
 		
@@ -222,6 +251,28 @@ public class ContaPfService {
 				LocalDateTime.now(), accTo);
 		transactionRepository.save(received);
 		
+	}
+	
+	@Transactional
+	public void registerPixKey(Long id, PixKeyRequestDto dto) {
+		
+		AccountPf acc = repository.findById(id).orElseThrow(
+				() -> new EntityNotFoundException("Conta não encontrada."));
+		
+		if(acc.getStatus() != StatusAccount.ATIVA) {
+			throw new BadResquestException("Conta não encontrada.");
+		}
+		
+		if(acc.getPixKey() != null) {
+			throw new BadResquestException("A conta já possui uma chave PIX cadastrada.");
+		}
+		
+		if(!PixKeyValidator.isValidPixKey(dto.pixKey())) {
+			throw new BadResquestException("Conta inválida.");
+		}
+		
+		acc.setAgency(dto.pixKey());
+		repository.save(acc);
 	}
 
 }

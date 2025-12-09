@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.banco.ms.dto.ContaPfReponseDto;
 import com.banco.ms.dto.ContaPfRequestDto;
 import com.banco.ms.dto.ContaPfUpdateRequestDto;
+import com.banco.ms.dto.PixKeyRequestDto;
 import com.banco.ms.dto.TransactionFilterDto;
 import com.banco.ms.dto.TransactionRequestDto;
 import com.banco.ms.dto.TransactionResponseDto;
@@ -109,6 +110,12 @@ public class ContaPfController {
 	public ResponseEntity<Void> transfer(@Valid @RequestBody TransferRequestDto dto){
 		service.transfer(dto);
 		return ResponseEntity.ok().build();
+	}
+	
+	@PutMapping("/{id}/cadastrar-pix")
+	public ResponseEntity<String> registerPixKey(@PathVariable Long id, @RequestBody @Valid PixKeyRequestDto dto){
+		service.registerPixKey(id, dto);
+		return ResponseEntity.ok("Chave PIX cadastrada com sucesso.");
 	}
 
 

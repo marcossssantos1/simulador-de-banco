@@ -42,6 +42,9 @@ public class AccountPf{
 	@Column(nullable = false, unique = true)
 	private String numberAccount;
 	
+	@Column(nullable = true, unique = true)
+	private String pixKey;
+	
 	@Enumerated(EnumType.STRING)
 	private StatusAccount status;
 	
@@ -52,6 +55,22 @@ public class AccountPf{
 		super();
 		this.name = name;
 		this.balance = balance;
+		this.status = status;
+	}
+	
+	
+
+	public AccountPf(Long id, String name, LocalDateTime createAt, BigDecimal balance, String cpf, String agency,
+			String numberAccount, String pixKey, StatusAccount status) {
+		super();
+		this.id = id;
+		this.name = name;
+		this.createAt = createAt;
+		this.balance = balance;
+		this.cpf = cpf;
+		this.agency = agency;
+		this.numberAccount = numberAccount;
+		this.pixKey = pixKey;
 		this.status = status;
 	}
 
@@ -141,6 +160,16 @@ public class AccountPf{
 
 	public void setNumberAccount(String numberAccount) {
 		this.numberAccount = numberAccount;
+	}
+	
+	
+
+	public String getPixKey() {
+		return pixKey;
+	}
+
+	public void setPixKey(String pixKey) {
+		this.pixKey = pixKey;
 	}
 
 	@Override
