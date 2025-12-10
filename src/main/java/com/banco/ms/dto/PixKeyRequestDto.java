@@ -1,10 +1,13 @@
 package com.banco.ms.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import com.banco.ms.enums.PixKeyType;
+
+import jakarta.validation.constraints.NotNull;
 
 public record PixKeyRequestDto(
-		@NotBlank(message = "A chave PIX é obrigatória.")
-		String pixKey
-		) {
 
-}
+		String pixKey,
+		
+		@NotNull(message = "O tipo da chave PIX é obrigatório")
+		PixKeyType pixType
+		) {}

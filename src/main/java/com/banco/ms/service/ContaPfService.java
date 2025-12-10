@@ -4,8 +4,8 @@ import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
-import com.banco.ms.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -13,6 +13,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import com.banco.ms.dto.ContaPfReponseDto;
+import com.banco.ms.dto.ContaPfRequestDto;
+import com.banco.ms.dto.ContaPfUpdateRequestDto;
+import com.banco.ms.dto.PixKeyRequestDto;
+import com.banco.ms.dto.TransactionFilterDto;
+import com.banco.ms.dto.TransactionRequestDto;
+import com.banco.ms.dto.TransactionResponseDto;
+import com.banco.ms.dto.TransferRequestDto;
+import com.banco.ms.enums.PixKeyType;
 import com.banco.ms.enums.StatusAccount;
 import com.banco.ms.enums.TransactiontType;
 import com.banco.ms.enums.TransferType;
@@ -267,11 +276,39 @@ public class ContaPfService {
 			throw new BadResquestException("A conta já possui uma chave PIX cadastrada.");
 		}
 		
-		if(!PixKeyValidator.isValidPixKey(dto.pixKey())) {
+		if(PixKeyValidator.isValidPixKey(dto.pixKey())) {
 			throw new BadResquestException("Conta inválida.");
 		}
 		
-		acc.setAgency(dto.pixKey());
+		String finalKey;
+		
+		if(dto.pixType() == PixKeyType.ALEATORIA) {
+			finalKey = UUID.randomUUID().toString();
+		}
+		
+		if (PixKeyValidator.isValidPixKey(dto.pixKey())) {
+	        throw new BadResquestException("Chave PIX inválida");
+	    }
+		
+		if(dto.pixKey().matches("^[a-fA-f0-9\\-]{36}$")) {
+			throw new BadResquestException("CPF inválido.");
+		} else {
+			finalKey = dto.pixKey();
+		}
+		
+		if(dto.pixKey().matches("^\\+55\\d{10,11}$")) {
+			throw new BadResquestException("Telefone inválido.");
+		} else {
+			finalKey = dto.pixKey();
+		}
+		
+		if(dto.pixKey().matches("^\\S+@\\S+\\.\\S+$")) {
+			throw new BadResquestException("Email inválido.");
+		} else {
+			finalKey = dto.pixKey();
+		}
+		
+		acc.setPixKey(finalKey);
 		repository.save(acc);
 	}
 

@@ -4,6 +4,7 @@ public class PixKeyValidator {
 	
 	public static boolean isValidPixKey(String key) {
 		
+		if (key == null || key.isBlank()) return false;
 		
 		if(key.matches("\\d{11}")) return true;
 		
