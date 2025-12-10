@@ -17,6 +17,7 @@ import com.banco.ms.dto.ContaPfReponseDto;
 import com.banco.ms.dto.ContaPfRequestDto;
 import com.banco.ms.dto.ContaPfUpdateRequestDto;
 import com.banco.ms.dto.PixKeyRequestDto;
+import com.banco.ms.dto.PixKeyResponseDto;
 import com.banco.ms.dto.TransactionFilterDto;
 import com.banco.ms.dto.TransactionRequestDto;
 import com.banco.ms.dto.TransactionResponseDto;
@@ -29,10 +30,10 @@ import com.banco.ms.exceptions.BadResquestException;
 import com.banco.ms.exceptions.EntityNotFoundException;
 import com.banco.ms.exceptions.InvalidAccountException;
 import com.banco.ms.model.AccountPf;
+import com.banco.ms.model.Pixkey;
 import com.banco.ms.model.Transaction;
 import com.banco.ms.repository.ContaPfRepository;
 import com.banco.ms.repository.TransactionRepository;
-import com.banco.ms.util.PixKeyValidator;
 
 import jakarta.transaction.Transactional;
 
@@ -77,6 +78,23 @@ public class ContaPfService {
 		}
 	}
 
+	
+	public String resolvePixKey(PixKeyRequestDto dto) {
+		
+		if(dto.pixType() == PixKeyType.ALEATORIA) {
+			return UUID.randomUUID().toString();
+		}
+		
+		if(dto.pixKey() == null || dto.pixKey().isBlank()) {
+			throw new BadResquestException("A chave PIX é obrigatória esse tipo");
+		}
+		
+		return dto.pixKey().trim();
+		
+		
+		
+	}
+	
 	public AccountPf create(AccountPf pf) {
 		return repository.save(pf);
 	}
@@ -118,8 +136,20 @@ public class ContaPfService {
 	}
 
 	public ContaPfReponseDto toDto(AccountPf acc) {
-		return new ContaPfReponseDto(acc.getName(), acc.getBalance(), acc.getStatus(),
-				acc.getCpf(), acc.getAgency(), acc.getNumberAccount());
+		List<PixKeyResponseDto> keys = acc.getPixKey()
+		        .stream()
+		        .map(k -> new PixKeyResponseDto(k.getId(), k.getValue(), k.getType()))
+		        .toList();
+
+		    return new ContaPfReponseDto(
+		            acc.getName(),
+		            acc.getBalance(),
+		            acc.getStatus(),
+		            acc.getCpf(),
+		            acc.getAgency(),
+		            acc.getNumberAccount(),
+		            keys
+		    );
 	}
 
 	public AccountPf fromDto(ContaPfRequestDto dto) {
@@ -268,48 +298,43 @@ public class ContaPfService {
 		AccountPf acc = repository.findById(id).orElseThrow(
 				() -> new EntityNotFoundException("Conta não encontrada."));
 		
-		if(acc.getStatus() != StatusAccount.ATIVA) {
-			throw new BadResquestException("Conta não encontrada.");
+		String finalKey = resolvePixKey(dto);
+		
+		validatePixKey(finalKey, dto.pixType());
+		
+		if(repository.existsByPixKey(finalKey)) {
+			throw new BadResquestException("Essa chave PIX já está cadastrada.");
 		}
 		
-		if(acc.getPixKey() != null) {
-			throw new BadResquestException("A conta já possui uma chave PIX cadastrada.");
-		}
+		Pixkey pix = new Pixkey(finalKey, dto.pixType(), acc);
 		
-		if(PixKeyValidator.isValidPixKey(dto.pixKey())) {
-			throw new BadResquestException("Conta inválida.");
-		}
-		
-		String finalKey;
-		
-		if(dto.pixType() == PixKeyType.ALEATORIA) {
-			finalKey = UUID.randomUUID().toString();
-		}
-		
-		if (PixKeyValidator.isValidPixKey(dto.pixKey())) {
-	        throw new BadResquestException("Chave PIX inválida");
-	    }
-		
-		if(dto.pixKey().matches("^[a-fA-f0-9\\-]{36}$")) {
-			throw new BadResquestException("CPF inválido.");
-		} else {
-			finalKey = dto.pixKey();
-		}
-		
-		if(dto.pixKey().matches("^\\+55\\d{10,11}$")) {
-			throw new BadResquestException("Telefone inválido.");
-		} else {
-			finalKey = dto.pixKey();
-		}
-		
-		if(dto.pixKey().matches("^\\S+@\\S+\\.\\S+$")) {
-			throw new BadResquestException("Email inválido.");
-		} else {
-			finalKey = dto.pixKey();
-		}
-		
-		acc.setPixKey(finalKey);
+		acc.getPixKey().add(pix);
 		repository.save(acc);
+	}
+	
+	private void validatePixKey(String key, PixKeyType type) {
+
+	    switch (type) {
+	        case CPF -> {
+	            if (!key.matches("\\d{11}"))
+	                throw new BadResquestException("CPF inválido.");
+	        }
+
+	        case EMAIL -> {
+	            if (!key.matches("^\\S+@\\S+\\.\\S+$"))
+	                throw new BadResquestException("Email inválido.");
+	        }
+
+	        case TELEFONE -> {
+	            if (!key.matches("^\\+55\\d{10,11}$"))
+	                throw new BadResquestException("Telefone inválido. Use formato +5511999999999");
+	        }
+
+	        case ALEATORIA -> {
+	            if (!key.matches("^[a-fA-F0-9\\-]{36}$"))
+	                throw new BadResquestException("Chave aleatória inválida.");
+	        }
+	    }
 	}
 
 }

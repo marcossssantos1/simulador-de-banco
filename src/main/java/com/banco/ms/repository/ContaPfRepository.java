@@ -9,4 +9,8 @@ import com.banco.ms.model.AccountPf;
 public interface ContaPfRepository extends JpaRepository<AccountPf, Long>{
 
 	Optional<AccountPf> findByPixKey(String pixKey);
+
+	boolean existsByPixKey(String finalKey);
+
+	
 }

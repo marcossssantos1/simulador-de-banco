@@ -2,12 +2,15 @@ package com.banco.ms.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import org.hibernate.annotations.CreationTimestamp;
 
 import com.banco.ms.enums.StatusAccount;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -15,6 +18,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -42,8 +46,8 @@ public class AccountPf{
 	@Column(nullable = false, unique = true)
 	private String numberAccount;
 	
-	@Column(nullable = true, unique = true)
-	private String pixKey;
+	@OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Pixkey> pixKey = new ArrayList<>();
 	
 	@Enumerated(EnumType.STRING)
 	private StatusAccount status;
@@ -61,7 +65,7 @@ public class AccountPf{
 	
 
 	public AccountPf(Long id, String name, LocalDateTime createAt, BigDecimal balance, String cpf, String agency,
-			String numberAccount, String pixKey, StatusAccount status) {
+			String numberAccount, List<Pixkey> pixKey, StatusAccount status) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -161,14 +165,12 @@ public class AccountPf{
 	public void setNumberAccount(String numberAccount) {
 		this.numberAccount = numberAccount;
 	}
-	
-	
 
-	public String getPixKey() {
+	public List<Pixkey> getPixKey() {
 		return pixKey;
 	}
 
-	public void setPixKey(String pixKey) {
+	public void setPixKey(List<Pixkey> pixKey) {
 		this.pixKey = pixKey;
 	}
 
