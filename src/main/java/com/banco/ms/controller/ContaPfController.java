@@ -118,5 +118,10 @@ public class ContaPfController {
 		return ResponseEntity.ok("Chave PIX cadastrada com sucesso.");
 	}
 
-
+	@DeleteMapping("/{id}/pix")
+	public ResponseEntity<Void> deletePix(@PathVariable Long id, @RequestParam String value){
+		service.removePixKey(id, value);
+		return ResponseEntity.noContent().build();
+	}
+	
 }

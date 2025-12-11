@@ -28,11 +28,13 @@ import com.banco.ms.enums.TransactiontType;
 import com.banco.ms.enums.TransferType;
 import com.banco.ms.exceptions.BadResquestException;
 import com.banco.ms.exceptions.EntityNotFoundException;
+import com.banco.ms.exceptions.ForbiddenOperationException;
 import com.banco.ms.exceptions.InvalidAccountException;
 import com.banco.ms.model.AccountPf;
 import com.banco.ms.model.Pixkey;
 import com.banco.ms.model.Transaction;
 import com.banco.ms.repository.ContaPfRepository;
+import com.banco.ms.repository.PixKeyRepository;
 import com.banco.ms.repository.TransactionRepository;
 
 import jakarta.transaction.Transactional;
@@ -45,6 +47,9 @@ public class ContaPfService {
 
 	@Autowired
 	private TransactionRepository transactionRepository;
+	
+	@Autowired
+	private PixKeyRepository pixKeyRepository;
 	
 	public String generateAccountNumber() {
 		int numero = (int)(Math.random() * 90000000) + 10000000;
@@ -302,7 +307,7 @@ public class ContaPfService {
 		
 		validatePixKey(finalKey, dto.pixType());
 		
-		if(repository.existsByPixKey(finalKey)) {
+		if(pixKeyRepository.existsByValue(finalKey)) {
 			throw new BadResquestException("Essa chave PIX já está cadastrada.");
 		}
 		
@@ -335,6 +340,26 @@ public class ContaPfService {
 	                throw new BadResquestException("Chave aleatória inválida.");
 	        }
 	    }
+	}
+	
+	@Transactional
+	public void removePixKey(Long id, String value) {
+		
+		AccountPf acc = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Conta não encontrada."));
+		
+		Pixkey pix = pixKeyRepository.findByValue(value).orElseThrow(() -> new EntityNotFoundException("Chave PIX não encontrada"));
+				
+		if(!pix.getAcc().getId().equals(id)) {
+			throw new ForbiddenOperationException("Essa chave PIX não pertence a esta conta");
+		}
+		
+		acc.getPixKey().remove(pix);
+		
+		pixKeyRepository.delete(pix);
+		
+		repository.save(acc);
+				
+		
 	}
 
 }
