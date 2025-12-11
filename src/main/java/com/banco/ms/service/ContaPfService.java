@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.banco.ms.dto.ContaPfReponseDto;
@@ -27,6 +28,7 @@ import com.banco.ms.enums.StatusAccount;
 import com.banco.ms.enums.TransactiontType;
 import com.banco.ms.enums.TransferType;
 import com.banco.ms.exceptions.BadResquestException;
+import com.banco.ms.exceptions.ConflictCpfException;
 import com.banco.ms.exceptions.EntityNotFoundException;
 import com.banco.ms.exceptions.ForbiddenOperationException;
 import com.banco.ms.exceptions.InvalidAccountException;
@@ -164,6 +166,9 @@ public class ContaPfService {
 		acc.setName(dto.name());
 		acc.setBalance(BigDecimal.ZERO);
 		acc.setStatus(StatusAccount.EM_ANALISE);
+		if(repository.existsByCpf(dto.cpf())) {
+			throw new ConflictCpfException("Esse CPF já está cadastrado em outra conta.");
+		}
 		acc.setCpf(dto.cpf());
 		acc.setAgency("0001");
 		acc.setNumberAccount(generateAccountNumber());
@@ -377,6 +382,36 @@ public class ContaPfService {
 			}
 		}
 		
+	}
+	
+	@Transactional
+	public void validateAndActivate(Long id) {
+		AccountPf acc = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Conta não encontrada."));
+		
+		if(acc.getStatus() != StatusAccount.EM_ANALISE) throw new BadResquestException("A conta não está em analise!");
+		
+		if(acc.getName() == null || acc.getName().isBlank()) throw new BadResquestException("Nome obrigatório para ativação da conta.");
+		
+		if(acc.getAgency() == null || acc.getAgency().isBlank()) throw new BadResquestException("Agencia não definida.");
+		
+		if(acc.getNumberAccount() == null || acc.getNumberAccount().isBlank()) throw new BadResquestException("Número da conta não foi gerado.");
+		
+		acc.setStatus(StatusAccount.ATIVA);
+		repository.save(acc);
+	}
+	
+	@Scheduled(fixedDelay = 30000)
+	public void autoActivateAccounts() {
+		
+		List<AccountPf> acc = repository.findAllByStatus(StatusAccount.EM_ANALISE);
+		
+		acc.forEach(accs -> {
+			try {
+				validateAndActivate(accs.getId());
+			} catch (Exception e) {
+				throw new BadResquestException("Número da");
+			}
+		});
 	}
 
 }

@@ -49,6 +49,14 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
 	}
 	
+	@ExceptionHandler(ConflictCpfException.class)
+	public ResponseEntity<ErrorResponse> duplicadeCPF(Exception ex, HttpServletRequest request){
+		ErrorResponse error = new ErrorResponse(LocalDateTime.now(), HttpStatus.CONFLICT.value(), "Forbidden", 
+				ex.getMessage(), request.getRequestURI());
+		
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+	}
+	
 	@ExceptionHandler(InvalidAccountException.class)
 	public ResponseEntity<ErrorResponse> handleInvalideAccount(Exception ex, HttpServletRequest request){
 		ErrorResponse error = new ErrorResponse(LocalDateTime.now(), HttpStatus.UNPROCESSABLE_ENTITY.value(), "Conta inválida", 
