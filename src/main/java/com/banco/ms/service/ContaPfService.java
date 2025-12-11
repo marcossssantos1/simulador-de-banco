@@ -134,8 +134,10 @@ public class ContaPfService {
 		repository.save(acc);
 	}
 
-	public void deleteAccount(Long id) {
+	public void deleteAccount(Long id, StatusAccount status) {
 		AccountPf acc = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Conta não localizada com esse id " + id));
+		
+		validateStatusChange(acc, status);
 		acc.setStatus(StatusAccount.ENCERRADA);
 		repository.save(acc);
 	}
@@ -359,6 +361,21 @@ public class ContaPfService {
 		
 		repository.save(acc);
 				
+	}
+	
+	private void validateStatusChange(AccountPf acc, StatusAccount status) {
+		
+		if(acc.getStatus() == StatusAccount.ATIVA 
+				&& status == StatusAccount.ENCERRADA) {
+			
+			if(acc.getBalance().compareTo(BigDecimal.ZERO) > 0) {
+				throw new BadResquestException("A conta não pode ser encerrada pois ainda possui saldo positivo.");
+			}
+			
+			if(acc.getBalance().compareTo(BigDecimal.ZERO) < 0) {
+				throw new ForbiddenOperationException("A conta não pode ser encerrada pois possui saldo negativo");
+			}
+		}
 		
 	}
 

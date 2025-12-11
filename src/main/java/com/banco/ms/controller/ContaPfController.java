@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -27,6 +28,7 @@ import com.banco.ms.dto.TransactionFilterDto;
 import com.banco.ms.dto.TransactionRequestDto;
 import com.banco.ms.dto.TransactionResponseDto;
 import com.banco.ms.dto.TransferRequestDto;
+import com.banco.ms.enums.StatusAccount;
 import com.banco.ms.model.AccountPf;
 import com.banco.ms.service.ContaPfService;
 
@@ -70,9 +72,9 @@ public class ContaPfController {
 		return ResponseEntity.noContent().build();
 	}
 
-	@DeleteMapping("/encerrar/{id}")
-	public ResponseEntity<Void> deleteAccount(@PathVariable Long id){
-		service.deleteAccount(id);
+	@PatchMapping("/{id}/encerrar")
+	public ResponseEntity<Void> deleteAccount(@PathVariable Long id, @RequestParam StatusAccount status){
+		service.deleteAccount(id, status);
 		return ResponseEntity.noContent().build();
 	}
 	
