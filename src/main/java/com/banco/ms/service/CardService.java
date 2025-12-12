@@ -6,9 +6,11 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.banco.ms.dto.CarResponseDto;
+import com.banco.ms.dto.CardPurchaseDto;
 import com.banco.ms.dto.CardRequestDto;
 import com.banco.ms.enums.CardStatus;
 import com.banco.ms.enums.CardTier;
@@ -105,6 +107,43 @@ public class CardService {
 	@Transactional
 	public void blockCard(Long id) {
 		Card card = cardRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Conta não encontrada."));
+		card.setCardStatus(CardStatus.BLOQUEADO);
+	}
+	
+	@Transactional
+	public void cancelCard(Long id) {
+		Card card = cardRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Conta não encontrada."));
+		card.setCardStatus(CardStatus.CANCELADO);
+	}
+	
+	@Transactional
+	public void makePurchase(CardPurchaseDto dto) {
+		Card card = cardRepository.findById(dto.cardId()).orElseThrow(() -> new EntityNotFoundException("Conta não encontrada."));
+		
+		if(card.getCardStatus() != CardStatus.ATIVO) throw new BadResquestException("Cartão não está ativo.");
+		
+		BigDecimal newUsed = card.getUsedlimit().add(dto.amount());
+		
+		if(newUsed.compareTo(card.getLimitValue()) > 0) throw new BadResquestException("Limite insuficiente");
+		
+		card.setUsedlimit(newUsed);
+		cardRepository.save(card);
+	}
+	
+	@Scheduled(cron = "0 0 0 1 * *")
+	@Transactional
+	public void closeInvoice() {
+		List<Card> cards = cardRepository.findAll();
+		
+		cards.forEach(card -> {
+			if(card.getUsedlimit().compareTo(BigDecimal.ZERO) > 0) {
+				if(card.getUsedlimit().compareTo(card.getLimitValue()) > 0) {
+					card.setCardStatus(CardStatus.BLOQUEADO);
+				}
+				
+				card.setUsedlimit(BigDecimal.ZERO);
+			}
+		});
 	}
 
 }
