@@ -23,5 +23,7 @@ public interface ContaPfRepository extends JpaRepository<AccountPf, Long>{
 	boolean existsByCpf(
 			@NotBlank(message = "CPF é obrigatório para abrir uma conta") @CPF @Pattern(regexp = "\\d{11}", message = "CPF deve ter 11 números") String cpf);
 
+	Optional <AccountPf> findByCpf(@NotBlank String cpf);
+
 	
 }

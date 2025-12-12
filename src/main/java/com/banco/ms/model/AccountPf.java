@@ -46,6 +46,9 @@ public class AccountPf{
 	@Column(nullable = false, unique = true)
 	private String numberAccount;
 	
+	@Column(precision = 19, scale = 2)
+	private BigDecimal income;
+	
 	@OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Pixkey> pixKey = new ArrayList<>();
 	
@@ -61,8 +64,21 @@ public class AccountPf{
 		this.balance = balance;
 		this.status = status;
 	}
-	
-	
+
+	public AccountPf(Long id, String name, LocalDateTime createAt, BigDecimal balance, String cpf, String agency,
+			String numberAccount, BigDecimal income, List<Pixkey> pixKey, StatusAccount status) {
+		super();
+		this.id = id;
+		this.name = name;
+		this.createAt = createAt;
+		this.balance = balance;
+		this.cpf = cpf;
+		this.agency = agency;
+		this.numberAccount = numberAccount;
+		this.income = income;
+		this.pixKey = pixKey;
+		this.status = status;
+	}
 
 	public AccountPf(Long id, String name, LocalDateTime createAt, BigDecimal balance, String cpf, String agency,
 			String numberAccount, List<Pixkey> pixKey, StatusAccount status) {
@@ -172,6 +188,16 @@ public class AccountPf{
 
 	public void setPixKey(List<Pixkey> pixKey) {
 		this.pixKey = pixKey;
+	}
+	
+	
+
+	public BigDecimal getIncome() {
+		return income;
+	}
+
+	public void setIncome(BigDecimal income) {
+		this.income = income;
 	}
 
 	@Override
