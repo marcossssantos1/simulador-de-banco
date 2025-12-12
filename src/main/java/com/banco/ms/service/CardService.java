@@ -3,10 +3,12 @@ package com.banco.ms.service;
 import java.io.ObjectInputFilter.Status;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.banco.ms.dto.CarResponseDto;
 import com.banco.ms.dto.CardRequestDto;
 import com.banco.ms.enums.CardStatus;
 import com.banco.ms.enums.CardTier;
@@ -92,6 +94,17 @@ public class CardService {
 	
 	private String generateCVV() {
 		return String.valueOf((int)(Math.random() * 900 + 100));
+	}
+	
+	public List<CarResponseDto> listCards(String cpf){
+		AccountPf acc = contaRepository.findByCpf(cpf).orElseThrow(() -> new EntityNotFoundException("Conta não encontrada."));
+		
+		return cardRepository.findAllByOwnerId(acc.getId()).stream().map(CarResponseDto::new).toList();
+	}
+	
+	@Transactional
+	public void blockCard(Long id) {
+		Card card = cardRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Conta não encontrada."));
 	}
 
 }
