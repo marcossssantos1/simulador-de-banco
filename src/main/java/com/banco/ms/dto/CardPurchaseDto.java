@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record CardPurchaseDto(
-		@NotNull Long cardId,
+		@NotNull String cardNumber,
 		@NotNull BigDecimal amount,
 		@NotBlank String description
 		) {

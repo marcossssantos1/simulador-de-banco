@@ -157,6 +157,7 @@ public class ContaPfService {
 		            acc.getCpf(),
 		            acc.getAgency(),
 		            acc.getNumberAccount(),
+		            acc.getIncome(),
 		            keys
 		    );
 	}
@@ -171,6 +172,7 @@ public class ContaPfService {
 		}
 		acc.setCpf(dto.cpf());
 		acc.setAgency("0001");
+		acc.setIncome(dto.income());
 		acc.setNumberAccount(generateAccountNumber());
 		return acc;
 	}

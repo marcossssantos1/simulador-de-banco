@@ -1,6 +1,5 @@
 package com.banco.ms.service;
 
-import java.io.ObjectInputFilter.Status;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -47,13 +46,14 @@ public class CardService {
 			throw new BadResquestException("Conta está abaixo de -500. Cartão bloqueado automaticamente");
 		}
 		
-		if(acc.getIncome() == null || acc.getIncome().compareTo(BigDecimal.ZERO)) {
+		
+		if(acc.getIncome() == null || acc.getIncome().compareTo(BigDecimal.ZERO) <= 0) {
 			throw new BadResquestException("Renda obrigatória para solicitar um cartão.");
 		}
 		
 		CardTier tier = selectTier(acc.getIncome());
 		
-		if(cardRepository.existsByOwnerIdAndTier(acc.getId(), tier)) throw new BadResquestException("Você já possuium cartão desse tipo.");
+		if(cardRepository.existsByOwnerIdAndCardTier(acc.getId(), tier)) throw new BadResquestException("Você já possuium cartão desse tipo.");
 		
 		Card card = new Card();
 		card.setCardTier(tier);
@@ -118,7 +118,7 @@ public class CardService {
 	
 	@Transactional
 	public void makePurchase(CardPurchaseDto dto) {
-		Card card = cardRepository.findById(dto.cardId()).orElseThrow(() -> new EntityNotFoundException("Conta não encontrada."));
+		Card card = cardRepository.findByCardNumber(dto.cardNumber()).orElseThrow(() -> new EntityNotFoundException("Conta não encontrada."));
 		
 		if(card.getCardStatus() != CardStatus.ATIVO) throw new BadResquestException("Cartão não está ativo.");
 		

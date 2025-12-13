@@ -12,5 +12,6 @@ public record ContaPfReponseDto(
 		String cpf,
 		String agency,
 		String numberAccount,
+		BigDecimal income,
 		List<PixKeyResponseDto> pixKeys
 		) {}
