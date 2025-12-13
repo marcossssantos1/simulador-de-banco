@@ -2,6 +2,7 @@ package com.banco.ms.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.banco.ms.dto.CarResponseDto;
 import com.banco.ms.dto.CardPurchaseDto;
 import com.banco.ms.dto.CardRequestDto;
+import com.banco.ms.dto.PurchaseRequestDto;
 import com.banco.ms.enums.CardStatus;
 import com.banco.ms.enums.CardTier;
 import com.banco.ms.enums.StatusAccount;
@@ -18,8 +20,12 @@ import com.banco.ms.exceptions.BadResquestException;
 import com.banco.ms.exceptions.EntityNotFoundException;
 import com.banco.ms.model.AccountPf;
 import com.banco.ms.model.Card;
+import com.banco.ms.model.Invoice;
+import com.banco.ms.model.Purchase;
 import com.banco.ms.repository.CardRepository;
 import com.banco.ms.repository.ContaPfRepository;
+import com.banco.ms.repository.InvoiceRepository;
+import com.banco.ms.repository.PurchaseRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -31,6 +37,12 @@ public class CardService {
 	
 	@Autowired
 	private ContaPfRepository contaRepository;
+	
+	@Autowired
+	private InvoiceRepository invoiceRepository;
+	
+	@Autowired
+	private PurchaseRepository purchaseRepository;
 	
 	@Transactional
 	public Card requestCard(CardRequestDto dto){
@@ -146,4 +158,44 @@ public class CardService {
 		});
 	}
 
+	@Transactional
+	public Purchase makePurchase(Long id, CardPurchaseDto dto) {
+		
+			Card card = cardRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Cartão não encontrado."));
+			
+			if(card.getCardStatus() != CardStatus.ATIVO) throw new BadResquestException("Cartão bloqueado/cancelado.");
+			
+			if(card.getLimitValue().compareTo(dto.amount()) < 0) throw new BadResquestException("Limite insuficiente");
+			
+			LocalDate date = LocalDate.now();
+			
+			Invoice invoice = invoiceRepository.findByCardAndMonthAndYear(card, date.getMonthValue(), date.getYear())
+					.orElseGet(() -> {
+						Invoice newInvoice = new Invoice();
+						
+						newInvoice.setMonth(date.getMonthValue());
+						newInvoice.setYear(date.getYear());
+						newInvoice.setDate(LocalDate.of(date.getYear(), date.getMonthValue(), 10));
+						
+						return invoiceRepository.save(newInvoice);
+					});
+			
+			Purchase p = new Purchase();
+			p.setAmount(dto.amount());
+			p.setDescription(dto.description());
+			p.setDate(LocalDateTime.now());
+			p.setCard(card);
+			p.setInvoice(invoice);
+			
+			card.setUsedlimit(dto.amount());
+			
+			invoice.addPurchase(p);
+			
+			purchaseRepository.save(p);
+			invoiceRepository.save(invoice);
+			cardRepository.save(card);
+			
+			return p;
+	}
+	
 }
