@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
 @Entity
@@ -24,10 +25,28 @@ public class Purchase {
 	private LocalDateTime date;
 	
 	@ManyToOne
+	@JoinColumn(name = "card_id")
 	private Card card;
+	
+	@ManyToOne
+	@JoinColumn(name = "invoice_id")
+	private Invoice invoice;
 	
 	public Purchase() {
 	}
+
+	public Purchase(Long id, String description, BigDecimal amount, LocalDateTime date, Card card, Invoice invoice) {
+		super();
+		this.id = id;
+		this.description = description;
+		this.amount = amount;
+		this.date = date;
+		this.card = card;
+		this.invoice = invoice;
+	}
+
+
+
 
 	public Purchase(Long id, String description, BigDecimal amount, LocalDateTime date, Card card) {
 		super();
@@ -76,6 +95,14 @@ public class Purchase {
 
 	public void setCard(Card card) {
 		this.card = card;
+	}
+
+	public Invoice getInvoice() {
+		return invoice;
+	}
+
+	public void setInvoice(Invoice invoice) {
+		this.invoice = invoice;
 	}
 
 	@Override

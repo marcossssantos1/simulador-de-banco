@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import com.banco.ms.dto.CarResponseDto;
 import com.banco.ms.dto.CardPurchaseDto;
 import com.banco.ms.dto.CardRequestDto;
-import com.banco.ms.dto.PurchaseRequestDto;
+import com.banco.ms.dto.InvoiceResponse;
 import com.banco.ms.enums.CardStatus;
 import com.banco.ms.enums.CardTier;
 import com.banco.ms.enums.StatusAccount;
@@ -43,6 +43,11 @@ public class CardService {
 	
 	@Autowired
 	private PurchaseRepository purchaseRepository;
+	
+	public Card findById(Long id) {
+		Card card = cardRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Cartão não encontrado."));
+		return card;
+	}
 	
 	@Transactional
 	public Card requestCard(CardRequestDto dto){
@@ -196,6 +201,13 @@ public class CardService {
 			cardRepository.save(card);
 			
 			return p;
+	}
+	
+	public InvoiceResponse findByCardAndMonthYear(Card card, LocalDate month, LocalDate year) {
+		Invoice invoice = invoiceRepository.findByCardAndMonthAndYear(card, month.getMonthValue(), year.getYear())
+				.orElseThrow(() -> new EntityNotFoundException("Nenhuma fatura encontrada."));
+		
+		return InvoiceResponse.from(invoice);
 	}
 	
 }
