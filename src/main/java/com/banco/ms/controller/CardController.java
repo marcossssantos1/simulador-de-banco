@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.banco.ms.dto.CarResponseDto;
 import com.banco.ms.dto.CardPurchaseDto;
 import com.banco.ms.dto.CardRequestDto;
+import com.banco.ms.dto.InvoicePaymentRequestDto;
 import com.banco.ms.dto.InvoiceResponse;
 import com.banco.ms.exceptions.EntityNotFoundException;
 import com.banco.ms.model.Card;
@@ -69,6 +70,12 @@ public class CardController {
 				.orElseThrow(() -> new EntityNotFoundException("Nenhuma fatura encontrada."));
 		
 		return InvoiceResponse.from(invoice);
+	}
+	
+	@PostMapping("/{id}/fatura")
+	public ResponseEntity<Void> payInvoice(@PathVariable Long id, @Valid @RequestBody InvoicePaymentRequestDto dto){
+		service.payInvoice(id, dto);
+		return ResponseEntity.noContent().build();
 	}
 	
 }

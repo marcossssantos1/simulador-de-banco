@@ -12,9 +12,11 @@ import org.springframework.stereotype.Service;
 import com.banco.ms.dto.CarResponseDto;
 import com.banco.ms.dto.CardPurchaseDto;
 import com.banco.ms.dto.CardRequestDto;
+import com.banco.ms.dto.InvoicePaymentRequestDto;
 import com.banco.ms.dto.InvoiceResponse;
 import com.banco.ms.enums.CardStatus;
 import com.banco.ms.enums.CardTier;
+import com.banco.ms.enums.InvoiceStatus;
 import com.banco.ms.enums.StatusAccount;
 import com.banco.ms.exceptions.BadResquestException;
 import com.banco.ms.exceptions.EntityNotFoundException;
@@ -208,6 +210,40 @@ public class CardService {
 				.orElseThrow(() -> new EntityNotFoundException("Nenhuma fatura encontrada."));
 		
 		return InvoiceResponse.from(invoice);
+	}
+	
+	@Transactional
+	public void payInvoice(Long id, InvoicePaymentRequestDto dto) {
+		
+		Invoice invoice = invoiceRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Fatura não encontrada."));
+		
+		if(invoice.getInvoiceStatus() == InvoiceStatus.PAGA) throw new BadResquestException("Fatura já está paga.");
+		
+		Card card = invoice.getCard();
+		AccountPf acc = card.getOwner();
+		
+		if(acc.getStatus() != StatusAccount.ATIVA) throw new BadResquestException("Conta não está ativa");
+		
+		if(acc.getBalance().compareTo(dto.amount()) < 0) throw new BadResquestException("Saldo insuficiente para pagar a fatura.");
+		
+		BigDecimal remaining = invoice.getRemaining();
+		
+		if(dto.amount().compareTo(remaining) > 0) throw new BadResquestException("Valor maior que o saldo da fatura");
+		
+		acc.setBalance(acc.getBalance().subtract(dto.amount()));
+		
+		invoice.setPaidAmount(invoice.getPaidAmount().add(dto.amount()));
+		
+		card.setUsedlimit(card.getUsedlimit().subtract(dto.amount()));
+		
+		if(invoice.getRemaining().compareTo(BigDecimal.ZERO) == 0) invoice.setInvoiceStatus(InvoiceStatus.PAGA);
+		
+		contaRepository.save(acc);
+		
+		cardRepository.save(card);
+		
+		invoiceRepository.save(invoice);
+		
 	}
 	
 }

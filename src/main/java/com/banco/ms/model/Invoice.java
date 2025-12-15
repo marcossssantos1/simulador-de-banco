@@ -6,8 +6,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.banco.ms.enums.InvoiceStatus;
+
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -34,12 +39,36 @@ public class Invoice {
 	@OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL)
 	private List<Purchase> purchases = new ArrayList<>();
 	
+	@Enumerated(EnumType.STRING)
+	private InvoiceStatus invoiceStatus;
+	
+	@Column(precision = 19, scale = 2)
+	private BigDecimal paidAmount = BigDecimal.ZERO;
+	
 	public void addPurchase(Purchase purchase) {
 		purchases.add(purchase);
 		total = total.add(purchase.getAmount());
 	}
 	
+	public BigDecimal getRemaining() {
+		return total.subtract(paidAmount);
+	}
+	
 	public Invoice() {
+	}
+
+	public Invoice(Long id, int month, int year, LocalDate date, BigDecimal total, Card card, List<Purchase> purchases,
+			InvoiceStatus invoiceStatus, BigDecimal paidAmount) {
+		super();
+		this.id = id;
+		this.month = month;
+		this.year = year;
+		this.date = date;
+		this.total = total;
+		this.card = card;
+		this.purchases = purchases;
+		this.invoiceStatus = invoiceStatus;
+		this.paidAmount = paidAmount;
 	}
 
 	public Invoice(Long id, int month, int year, LocalDate date, BigDecimal total, Card card,
@@ -108,6 +137,22 @@ public class Invoice {
 
 	public void setPurchases(List<Purchase> purchases) {
 		this.purchases = purchases;
+	}
+
+	public InvoiceStatus getInvoiceStatus() {
+		return invoiceStatus;
+	}
+
+	public void setInvoiceStatus(InvoiceStatus invoiceStatus) {
+		this.invoiceStatus = invoiceStatus.ABERTA;
+	}
+	
+	public BigDecimal getPaidAmount() {
+		return paidAmount;
+	}
+
+	public void setPaidAmount(BigDecimal paidAmount) {
+		this.paidAmount = paidAmount;
 	}
 
 	@Override

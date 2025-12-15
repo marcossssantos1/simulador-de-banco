@@ -11,9 +11,9 @@ public record InvoiceResponse (
 		int year, 
 		BigDecimal total, 
 		LocalDate date, 
-		List<CardPurchaseDto> purchases
+		List<PurchaseResponseDto> purchases
 		){
-	
+
 	public static InvoiceResponse from(Invoice invoice) {
 		return new InvoiceResponse(
 				invoice.getMonth(),
@@ -21,8 +21,7 @@ public record InvoiceResponse (
 				invoice.getTotal(),
 				invoice.getDate(),
 				invoice.getPurchases().stream()
-				.map(CardPurchaseDto::from)
-				.toList()
+				.map(PurchaseResponseDto::from).toList()
 				);
 	}
 }
