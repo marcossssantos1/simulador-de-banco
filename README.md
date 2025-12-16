@@ -1,4 +1,4 @@
-# 📈 Sistema de Negociação Financeira – Backend
+# 📈 Sistema de Negociação Financeira – (API REST)
 
 Projeto backend desenvolvido em **Java com Spring Boot**, inspirado em **sistemas bancários e plataformas de negociação eletrônica**, com foco em **consistência de dados, regras de negócio e APIs REST**.
 
